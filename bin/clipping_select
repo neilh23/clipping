@@ -1,0 +1,32 @@
+#!/bin/bash
+
+MAXIDX=10
+
+mkdir -p ~/.clipping
+
+IDX=1
+
+cbf() {
+    echo ~/.clipping/clip-$( printf '%02d' $1 )
+}
+
+# nothing to do
+if [[ ! -f $( cbf 1 ) ]]; then exit 0; fi
+
+SELECT=$(
+while [[ -f $( cbf $IDX ) ]]; do
+    line=$( head -1 $( cbf $IDX ) )
+
+    if [[ $( wc -c <<<"$line" ) -gt 20 ]]; then
+        line="$( cut -c 1-17 <<<"$line" )..."
+    fi
+
+    echo "$IDX: $line"
+    ((IDX++))
+done | dmenu | cut -d : -f 1 )
+
+if [[ -z $SELECT ]]; then
+    exit 0
+fi
+
+cat $( cbf $SELECT ) | xclip -selection clipboard -i

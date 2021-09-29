@@ -1,0 +1,32 @@
+#!/bin/bash
+
+MAXIDX=10
+
+mkdir -p ~/.clipping
+
+TMPF=$( mktemp )
+
+xclip -selection clipboard -o > "$TMPF"
+
+if [[ ! -s $TMPF ]]; then
+    rm "$TMPF"
+    exit 0
+fi
+
+IDX=1
+
+cbf() {
+    echo ~/.clipping/clip-$( printf '%02d' $1 )
+}
+
+while [[ $IDX -lt $MAXIDX ]] && [[ -f $( cbf $IDX ) ]]; do
+    if diff -q "$TMPF" "$( cbf $IDX )" > /dev/null 2>&1; then break; fi
+    ((IDX++))
+done
+
+while [[ $IDX -gt 1 ]]; do
+    mv -f "$( cbf $(( $IDX - 1 )) )" "$( cbf $IDX )"
+    ((IDX--))
+done
+
+mv -f $TMPF "$( cbf 1 )"
